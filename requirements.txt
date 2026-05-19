@@ -1,0 +1,11 @@
+# 核心依赖
+opencv-python>=4.8.0
+numpy>=1.24.0
+insightface>=0.7.3
+
+# 可选依赖（send_msg 模块）
+# Flask>=3.0.0
+
+# 工具库
+onnxruntime>=1.16.0
+Pillow>=10.0.0

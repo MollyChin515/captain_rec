@@ -1,0 +1,62 @@
+# InsightFace 模型缓存（运行时自动下载）
+.insightface/
+
+# 测试视频（文件太大）
+captain_rec/test_folder/
+
+# 重复的训练文件夹（train_folder/ 已包含）
+captain_rec/train_folder/
+
+# Python 虚拟环境
+venv/
+env/
+ENV/
+.venv/
+
+# Python 编译缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE 配置
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# 截图和日志
+screenshots/
+warning_log.txt
+*.log
+logs/
+
+# 临时文件
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+*.swp
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# 证书和密钥
+*.pem
+*.key
+*.crt
