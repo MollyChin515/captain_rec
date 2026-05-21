@@ -1,5 +1,5 @@
 {
-  "rtsp_url": "rtsp://10.143.216.131:8554/usb_cam",
+  "rtsp_url": "rtsp://10.143.216.125:554/stream1",
   "event_code": "2-011",
   "event_name": "船长未按规定监航",
   "_upload_url_skills_disabled": "http://10.142.87.21:8098/api/behavior/abnormal",

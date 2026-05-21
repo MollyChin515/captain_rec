@@ -4,8 +4,6 @@
 # 测试视频（文件太大）
 captain_rec/test_folder/
 
-# 重复的训练文件夹（train_folder/ 已包含）
-captain_rec/train_folder/
 
 # Python 虚拟环境
 venv/
