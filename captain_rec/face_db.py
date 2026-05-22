@@ -66,15 +66,36 @@ class FaceDatabase:
     
     def _check_updates(self):
         current_files = self._get_image_files()
-        new_files = []
+        current_file_names = {f.name for f in current_files}
         
+        # 检测新增的文件
+        new_files = []
         for f in current_files:
             if f.name not in self.file_hashes:
                 new_files.append(f)
         
+        # 检测删除的文件
+        deleted_files = []
+        for fname in list(self.file_hashes.keys()):
+            if fname not in current_file_names:
+                deleted_files.append(fname)
+        
         if new_files:
-            print(f"📷 发现 {len(new_files)} 张新照片，正在更新数据库...")
+            print(f"📷 发现 {len(new_files)} 张新照片，正在添加...")
             self._add_new_faces(new_files)
+        
+        if deleted_files:
+            print(f"🗑️  检测到 {len(deleted_files)} 张照片已删除，正在移除...")
+            for fname in deleted_files:
+                # 从数据库中删除
+                if fname in self.file_hashes:
+                    name = Path(fname).stem  # 获取文件名（不含扩展名）
+                    if name in self.embeddings:
+                        del self.embeddings[name]
+                        print(f"  ✗ 已移除: {name}")
+                    del self.file_hashes[fname]
+        
+        if new_files or deleted_files:
             self._save()
     
     def _add_new_faces(self, files):

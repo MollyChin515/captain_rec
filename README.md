@@ -1,4 +1,4 @@
-# 船长在岗监控系统
+# 船长在岗监控系统功能测试说明
 
 基于人脸识别的船长在岗状态实时监控系统，当船长离开监控区域时自动发送告警。
 
@@ -6,7 +6,6 @@
 
 - 实时检测船长在岗状态
 - 基于 InsightFace 的高精度人脸识别
-- 自动缺勤告警（支持飞书等平台）
 - 灵活的配置参数（阈值、间隔、冷却时间）
 - 支持 RTSP 视频流
 - 告警时自动截图
@@ -19,7 +18,6 @@
 # 创建虚拟环境
 python3 -m venv venv
 source venv/bin/activate  # Linux/Mac
-# 或 venv\Scripts\activate  # Windows
 
 # 安装依赖
 pip install -r requirements.txt
