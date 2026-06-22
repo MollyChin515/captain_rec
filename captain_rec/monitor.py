@@ -23,7 +23,7 @@ class AttendanceMonitor:
         self.is_captain_detected = False
         
         # 最后识别到的员工信息
-        self.last_detected_employee = None  # {'name': str, 'employee_number': str, 'position': str}
+        self.last_detected_employee = None  # {'name': str, 'employee_id': str, 'position': str}
         
         # 帧计数器
         self.frame_counter = 0
@@ -68,7 +68,7 @@ class AttendanceMonitor:
                 # 存储最后识别到的员工信息
                 self.last_detected_employee = {
                     'name': r['name'],
-                    'employee_number': r['employee_id'],
+                    'employee_id': r['employee_id'],  # 工号
                     'position': r['position']
                 }
                 print(f"✅ 检测到: {r['name']} (工号:{r['employee_id']} 岗位:{r['position']} 相似度:{r['similarity']:.3f})")

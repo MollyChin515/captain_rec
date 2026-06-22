@@ -60,9 +60,9 @@ class FaceDatabase:
         self.app.prepare(ctx_id=config.Config.get_ctx_id())
         
         # 数据库
-        self.embeddings = {}      # {employee_id: embedding}
+        self.embeddings = {}      # {employee_number: embedding}  # 用系统编码作为key
         self.file_hashes = {}     # {filename: modify_time}
-        self.employee_info = {}   # {employee_id: {'name': str, 'position': str}}
+        self.employee_info = {}   # {employee_number: {'name': str, 'position': str, 'employee_id': str}}  # 用系统编码作为key，存储工号
         
         # 文件监控
         self._observer = None
@@ -162,8 +162,8 @@ class FaceDatabase:
     
     def _parse_folder_name(self, folder_name):
         """
-        解析文件夹名称，提取工号和姓名
-        文件夹格式: "工号姓名" 或 "工号_姓名" 或 "工号-姓名"
+        解析文件夹名称，提取系统编码和姓名
+        文件夹格式: "系统编码姓名" 或 "系统编码_姓名" 或 "系统编码-姓名"
         例如: "001张三", "001_张三", "001-张三"
         """
         # 尝试不同的分隔符
@@ -171,26 +171,26 @@ class FaceDatabase:
             if sep:
                 parts = folder_name.split(sep, 1)
                 if len(parts) == 2:
-                    employee_id, name = parts
-                    return employee_id, name
+                    employee_number, name = parts
+                    return employee_number, name
         
-        # 如果没有分隔符，尝试从开头提取数字作为工号
+        # 如果没有分隔符，尝试从开头提取数字作为系统编码
         import re
         match = re.match(r'^(\d+)(.+)$', folder_name)
         if match:
-            employee_id = match.group(1)
+            employee_number = match.group(1)
             name = match.group(2)
-            return employee_id, name
+            return employee_number, name
         
-        # 无法解析，使用整个名称作为工号和姓名
+        # 无法解析，使用整个名称作为系统编码和姓名
         return folder_name, folder_name
     
-    def _add_or_update_person(self, employee_id, name, position, photo_list, is_new=True):
+    def _add_or_update_person(self, employee_number, name, position, photo_list, is_new=True):
         """
         添加或更新一个人员
         
         Args:
-            employee_id: 员工工号
+            employee_number: 系统编码（自动生成）
             name: 员工姓名
             position: 员工岗位
             photo_list: 照片列表
@@ -208,24 +208,25 @@ class FaceDatabase:
         if embeddings:
             # 计算平均特征向量
             avg_embedding = np.mean(embeddings, axis=0)
-            self.embeddings[employee_id] = avg_embedding
+            self.embeddings[employee_number] = avg_embedding
             
-            # 保存员工信息
-            self.employee_info[employee_id] = {
+            # 保存员工信息（如果已存在则保留工号）
+            existing_info = self.employee_info.get(employee_number, {})
+            self.employee_info[employee_number] = {
                 'name': name,
                 'position': position,
-                'employee_id': employee_id
+                'employee_id': existing_info.get('employee_id', employee_number)  # 保留工号
             }
             
             # 计算该人的组合hash
             person_hash = self._compute_person_hash(photo_list)
-            self.file_hashes[f"{employee_id}_folder"] = person_hash
+            self.file_hashes[f"{employee_number}_folder"] = person_hash
             
             action = "已添加" if is_new else "已更新"
-            print(f"  ✓ {action}: {employee_id}{name} - {position} ({valid_count}张照片)")
+            print(f"  ✓ {action}: {employee_number}{name} - {position} ({valid_count}张照片)")
             return True
         else:
-            print(f"  ⚠️ 未检测到人脸: {employee_id}{name}")
+            print(f"  ⚠️ 未检测到人脸: {employee_number}{name}")
             return False
     
     def _get_image_files(self):
@@ -267,18 +268,18 @@ class FaceDatabase:
         current_persons = {}
         for f in current_files:
             if f.parent != self.train_folder:
-                # 子文件夹：文件夹名格式为"工号姓名"
+                # 子文件夹：文件夹名格式为"系统编码姓名"
                 folder_name = f.parent.name
-                employee_id, name = self._parse_folder_name(folder_name)
-                key = f"{employee_id}_folder"
+                employee_number, name = self._parse_folder_name(folder_name)
+                key = f"{employee_number}_folder"
             else:
                 # 根目录文件：使用文件名
-                employee_id, name = self._parse_folder_name(f.stem)
+                employee_number, name = self._parse_folder_name(f.stem)
                 key = f.name
             
             if key not in current_persons:
                 current_persons[key] = {
-                    'employee_id': employee_id,
+                    'employee_number': employee_number,
                     'name': name,
                     'photos': []
                 }
@@ -311,11 +312,11 @@ class FaceDatabase:
             print(f"📷 发现 {len(new_persons)} 个新人员，共 {total_photos} 张照片，正在添加...")
             for key in new_persons:
                 person_data = current_persons[key]
-                employee_id = person_data['employee_id']
+                employee_number = person_data['employee_number']
                 name = person_data['name']
                 # 如果员工信息中已有该员工，使用保存的岗位；否则使用默认岗位
-                position = self.employee_info.get(employee_id, {}).get('position', '未知岗位')
-                self._add_or_update_person(employee_id, name, position, person_data['photos'], is_new=True)
+                position = self.employee_info.get(employee_number, {}).get('position', '未知岗位')
+                self._add_or_update_person(employee_number, name, position, person_data['photos'], is_new=True)
         
         # 处理更新的人员（照片变化）
         if updated_persons:
@@ -323,29 +324,29 @@ class FaceDatabase:
             print(f"🔄 检测到 {len(updated_persons)} 个人员的照片已变化，共 {total_photos} 张照片，正在重新计算...")
             for key in updated_persons:
                 person_data = current_persons[key]
-                employee_id = person_data['employee_id']
+                employee_number = person_data['employee_number']
                 name = person_data['name']
-                position = self.employee_info.get(employee_id, {}).get('position', '未知岗位')
-                self._add_or_update_person(employee_id, name, position, person_data['photos'], is_new=False)
+                position = self.employee_info.get(employee_number, {}).get('position', '未知岗位')
+                self._add_or_update_person(employee_number, name, position, person_data['photos'], is_new=False)
         
         # 处理删除人员
         if deleted_persons:
             print(f"🗑️  检测到 {len(deleted_persons)} 个人员已删除，正在移除...")
             for key in deleted_persons:
                 if key in self.file_hashes:
-                    # 获取员工工号
+                    # 获取系统编码
                     if key.endswith("_folder"):
-                        employee_id = key.replace("_folder", "")
+                        employee_number = key.replace("_folder", "")
                     else:
-                        employee_id = Path(key).stem
+                        employee_number = Path(key).stem
                     
-                    if employee_id in self.embeddings:
-                        info = self.employee_info.get(employee_id, {})
-                        name = info.get('name', employee_id)
-                        del self.embeddings[employee_id]
-                        if employee_id in self.employee_info:
-                            del self.employee_info[employee_id]
-                        print(f"  ✗ 已移除: {employee_id}{name}")
+                    if employee_number in self.embeddings:
+                        info = self.employee_info.get(employee_number, {})
+                        name = info.get('name', employee_number)
+                        del self.embeddings[employee_number]
+                        if employee_number in self.employee_info:
+                            del self.employee_info[employee_number]
+                        print(f"  ✗ 已移除: {employee_number}{name}")
                     del self.file_hashes[key]
         
         if new_persons or updated_persons or deleted_persons:
@@ -357,17 +358,17 @@ class FaceDatabase:
         # 按文件夹分组
         folder_photos = {}
         for f in files:
-            # 如果图片在子文件夹中，文件夹名格式为"工号姓名"
+            # 如果图片在子文件夹中，文件夹名格式为"系统编码姓名"
             if f.parent != self.train_folder:
                 folder_name = f.parent.name
-                employee_id, name = self._parse_folder_name(folder_name)
+                employee_number, name = self._parse_folder_name(folder_name)
             else:
-                employee_id, name = self._parse_folder_name(f.stem)
+                employee_number, name = self._parse_folder_name(f.stem)
             
-            key = employee_id
+            key = employee_number
             if key not in folder_photos:
                 folder_photos[key] = {
-                    'employee_id': employee_id,
+                    'employee_number': employee_number,
                     'name': name,
                     'photos': []
                 }
@@ -375,10 +376,10 @@ class FaceDatabase:
         
         # 对每个人处理他们的所有照片
         for key, person_data in folder_photos.items():
-            employee_id = person_data['employee_id']
+            employee_number = person_data['employee_number']
             name = person_data['name']
-            position = self.employee_info.get(employee_id, {}).get('position', '未知岗位')
-            self._add_or_update_person(employee_id, name, position, person_data['photos'], is_new=True)
+            position = self.employee_info.get(employee_number, {}).get('position', '未知岗位')
+            self._add_or_update_person(employee_number, name, position, person_data['photos'], is_new=True)
     
     def _build_database(self):
         """构建数据库，支持文件夹结构"""
@@ -396,17 +397,17 @@ class FaceDatabase:
         # 按文件夹分组
         folder_photos = {}
         for f in files:
-            # 如果图片在子文件夹中，文件夹名格式为"工号姓名"
+            # 如果图片在子文件夹中，文件夹名格式为"系统编码姓名"
             if f.parent != self.train_folder:
                 folder_name = f.parent.name
-                employee_id, name = self._parse_folder_name(folder_name)
+                employee_number, name = self._parse_folder_name(folder_name)
             else:
-                employee_id, name = self._parse_folder_name(f.stem)
+                employee_number, name = self._parse_folder_name(f.stem)
             
-            key = employee_id
+            key = employee_number
             if key not in folder_photos:
                 folder_photos[key] = {
-                    'employee_id': employee_id,
+                    'employee_number': employee_number,
                     'name': name,
                     'photos': []
                 }
@@ -414,10 +415,10 @@ class FaceDatabase:
         
         # 对每个人处理他们的所有照片
         for key, person_data in folder_photos.items():
-            employee_id = person_data['employee_id']
+            employee_number = person_data['employee_number']
             name = person_data['name']
-            position = self.employee_info.get(employee_id, {}).get('position', '未知岗位')
-            self._add_or_update_person(employee_id, name, position, person_data['photos'], is_new=True)
+            position = self.employee_info.get(employee_number, {}).get('position', '未知岗位')
+            self._add_or_update_person(employee_number, name, position, person_data['photos'], is_new=True)
         
         print(f"✅ 数据库构建完成，共 {len(self.embeddings)} 名员工")
         self._save()
@@ -439,15 +440,15 @@ class FaceDatabase:
         识别人脸
         
         Returns:
-            tuple: (employee_id, name, position, similarity)
+            tuple: (employee_id, name, position, similarity)  # employee_id 是工号
         """
         if not self.embeddings:
             return None, None, None, 0.0
         
-        best_employee_id = None
+        best_employee_number = None
         best_sim = 0.0
         
-        for employee_id, emb in self.embeddings.items():
+        for employee_number, emb in self.embeddings.items():
             # 余弦相似度
             sim = np.dot(face_embedding, emb) / (
                 np.linalg.norm(face_embedding) * np.linalg.norm(emb)
@@ -455,24 +456,25 @@ class FaceDatabase:
             
             if sim > best_sim:
                 best_sim = sim
-                best_employee_id = employee_id
+                best_employee_number = employee_number
         
         if best_sim >= self.threshold:
             # 获取员工信息
-            info = self.employee_info.get(best_employee_id, {})
-            name = info.get('name', best_employee_id)
+            info = self.employee_info.get(best_employee_number, {})
+            name = info.get('name', '')
             position = info.get('position', '未知岗位')
-            return best_employee_id, name, position, best_sim
+            employee_id = info.get('employee_id', best_employee_number)  # 返回工号
+            return employee_id, name, position, best_sim
         return None, None, None, best_sim
     
     def get_all_employees(self):
         """获取所有员工信息"""
         employees = []
-        for employee_id in self.embeddings.keys():
-            info = self.employee_info.get(employee_id, {})
+        for employee_number in self.embeddings.keys():
+            info = self.employee_info.get(employee_number, {})
             employees.append({
-                'employee_id': employee_id,
-                'name': info.get('name', employee_id),
+                'employee_id': info.get('employee_id', ''),  # 工号
+                'name': info.get('name', ''),
                 'position': info.get('position', '未知岗位')
             })
         return employees
