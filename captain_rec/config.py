@@ -4,7 +4,7 @@ class Config:
     # 路径配置
     TRAIN_FOLDER = "train_folder"              # 员工照片文件夹（文件名=员工姓名）
     DATABASE_FILE = "face_db.pkl"       # 人脸数据库文件
-    CAPTAINS_FILE = "captains.json"     # 船长名单配置文件
+    EMPLOYEE_INFO_FILE = "employee_info.json"  # 员工信息缓存文件
     
     # 识别参数 
     THRESHOLD = 0.65                    # 人脸匹配阈值（0.65-0.75）

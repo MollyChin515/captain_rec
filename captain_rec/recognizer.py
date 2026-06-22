@@ -17,13 +17,15 @@ class FaceRecognizer:
         
         for face in faces:
             bbox = face.bbox.astype(int)
-            name, similarity = self.db.recognize(face.embedding)
+            employee_id, name, position, similarity = self.db.recognize(face.embedding)
             
             results.append({
                 'bbox': bbox,
+                'employee_id': employee_id,
                 'name': name,
+                'position': position,
                 'similarity': similarity,
-                'is_recognized': name is not None
+                'is_recognized': employee_id is not None
             })
         
         return results
@@ -35,7 +37,7 @@ class FaceRecognizer:
             
             if r['is_recognized']:
                 color = (0, 255, 0)  # 绿色 - 识别成功
-                label = f"{r['name']} ({r['similarity']:.2f})"
+                label = f"{r['position']}: {r['employee_id']}{r['name']} ({r['similarity']:.2f})"
             else:
                 color = (0, 0, 255)  # 红色 - 未识别
                 label = f"Unknown ({r['similarity']:.2f})"

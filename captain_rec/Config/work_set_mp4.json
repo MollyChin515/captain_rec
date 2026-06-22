@@ -1,0 +1,7 @@
+{
+  "rtsp_url": "test_video.mp4",
+  "event_code": "TEST-001",
+  "event_name": "MP4视频测试",
+  "_upload_url_skills_disabled": "http://10.142.87.21:8098/api/behavior/abnormal",
+  "local_url_skills": "http://127.0.0.1:5009/upload"
+}
