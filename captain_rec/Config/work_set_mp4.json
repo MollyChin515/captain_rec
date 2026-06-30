@@ -1,7 +1,11 @@
 {
-  "rtsp_url": "test_video.mp4",
-  "event_code": "TEST-001",
-  "event_name": "MP4视频测试",
-  "_upload_url_skills_disabled": "http://10.142.87.21:8098/api/behavior/abnormal",
-  "local_url_skills": "http://127.0.0.1:5009/upload"
+  "rtsp_url": "test_video2.mp4",
+  "camera_num": "984TC124",
+  "camera_locat": "位置：驾驶室，顶甲板，984TC124，室内半球，172.17.20.142",
+  "event_code_absent": "2-006",
+  "event_name_absent": "驾驶室离岗检测",
+  "event_code_no_face": "2-006",
+  "event_name_no_face": "驾驶室离岗检测",
+  "upload_url": "http://10.142.87.21:8098/api/behavior/abnormal",
+  "local_url": "http://127.0.0.1:5008/upload"
 }

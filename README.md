@@ -10,7 +10,8 @@
 - 每人支持多张照片特征融合，提高识别准确率
 - 灵活的配置参数（阈值、间隔、冷却时间）
 - 支持 RTSP 视频流和本地摄像头
-- 告警时自动截图保存
+- 告警时自动截图保存，支持中文标注
+- 截图包含摄像头编号、位置、时间等详细信息
 
 ## 快速开始
 
@@ -23,7 +24,16 @@ source venv/bin/activate  # Linux/Mac
 
 # 安装依赖
 pip install -r requirements.txt
+
+# 安装中文字体（用于截图标注）
+sudo apt-get install fonts-wqy-microhei  # Ubuntu/Debian
+# 或
+sudo yum install wqy-microhei-fonts      # CentOS/RHEL
 ```
+
+**字体说明：**
+- 系统会自动查找 `captain_rec/fonts/wqy-microhei.ttf` 字体文件
+- 如果字体文件不存在，截图标注将使用 OpenCV 默认字体（不支持中文）
 
 ### 2. 导入值班人员数据
 
@@ -214,13 +224,15 @@ captain_rec/
 ├── face_db.py           # 人脸数据库管理
 ├── recognizer.py        # 人脸识别器
 ├── monitor.py           # 在岗监控器
-├── alert_manager.py     # 告警管理器
+├── alert_manager.py     # 告警管理器（支持中文截图标注）
 ├── attendance_system.py # 考勤系统主类
 ├── work_set_config.py   # 工作集配置管理
 ├── utils.py             # 工具函数
 ├── employee_info.json    # 员工岗位信息缓存
 ├── Config/
 │   └── work_set.json    # 工作集配置
+├── fonts/               # 中文字体文件目录
+│   └── wqy-microhei.ttf # 文泉驿微米黑字体
 ├── train_folder/        # 员工照片目录（外部程序导入）
 │   ├── employees.json       # 员工完整信息
 │   ├── positions.json       # 岗位代码映射
@@ -238,3 +250,15 @@ captain_rec/
 4. **告警配置**: 确保 `local_url_skills` 服务器正常运行
 5. **性能优化**: 根据服务器性能调整 `DETECT_INTERVAL`
 6. **隐私保护**: 照片和特征数据仅用于值班监控，请妥善保管
+7. **中文字体**: 截图标注需要中文字体支持，请确保 `captain_rec/fonts/wqy-microhei.ttf` 存在
+
+## 截图标注说明
+
+告警截图会自动添加中文标注信息，包括：
+
+- 🚨 **告警类型**: "值班人员未在岗" 或 "未检测到人脸"
+- 📍 **摄像头编号**: 从配置文件读取
+- 📍 **位置信息**: 从配置文件读取
+- ⏰ **时间戳**: 告警发生的具体时间
+
+标注采用半透明黑色背景框，确保文字在各种背景下都清晰可见。

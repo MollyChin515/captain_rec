@@ -35,28 +35,37 @@ class WorkSetConfig:
         """获取视频流URL"""
         return self._config.get("rtsp_url", "")
     
-    def get_event_code(self) -> str:
-        """获取事件编码"""
-        return self._config.get("event_code", "")
-    
-    def get_event_name(self) -> str:
-        """获取事件名称"""
-        return self._config.get("event_name", "")
-    
-    def get_receiver_url(self) -> str:
-        """获取接收端URL"""
-        return self._config.get("local_url_skills", "")
-    
     def get_camera_num(self) -> str:
-        """获取摄像头编号（从event_code提取）"""
-        event_code = self.get_event_code()
-        if '-' in event_code:
-            return event_code.split('-')[0]
-        return ""
+        """获取摄像头编号"""
+        return self._config.get("camera_num", "")
     
-    def get_camera_location(self) -> str:
-        """获取摄像头位置（从event_name提取）"""
-        return self.get_event_name()
+    def get_camera_locat(self) -> str:
+        """获取摄像头位置描述"""
+        return self._config.get("camera_locat", "")
+    
+    def get_event_code_absent(self) -> str:
+        """获取缺勤事件编码"""
+        return self._config.get("event_code_absent", "2-006")
+    
+    def get_event_name_absent(self) -> str:
+        """获取缺勤事件名称"""
+        return self._config.get("event_name_absent", "驾驶室离岗检测")
+    
+    def get_event_code_no_face(self) -> str:
+        """获取无人脸事件编码"""
+        return self._config.get("event_code_no_face", "2-006")
+    
+    def get_event_name_no_face(self) -> str:
+        """获取无人脸事件名称"""
+        return self._config.get("event_name_no_face", "驾驶室离岗检测")
+    
+    def get_upload_url(self) -> str:
+        """获取上报URL"""
+        return self._config.get("upload_url", "")
+    
+    def get_local_url(self) -> str:
+        """获取本地接收端URL"""
+        return self._config.get("local_url", "")
     
     def reload(self):
         """重新加载配置文件"""
